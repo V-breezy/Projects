@@ -1,7 +1,7 @@
 # Projects
 Tools built as a beginner in devOps and cybersecurity, using languages like c, c++ and python mostly.
 # pw1.0
-pw1.0. is a python script for linux kernels which firstly prompts the user to choose a username and a code if an account does not already exist from the main menu.
+pw1.0. is a command line python script for linux kernels which firstly prompts the user to choose a username and a code if an account does not already exist from the main menu.
 if an account exists, the user would have two other options in the main menu to either log in or delete any existing account.
 This username and code are stored in a .json file in a hidden directory that'll automatically be created once the script is executed.
 The script then goes on to list various options, including the adding, copying, changing, viewing and deleting saved passwords.
