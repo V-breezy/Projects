@@ -1,0 +1,199 @@
+#! /usr/bin/python3
+
+# pw.py is a python script which enables users store their passwords (A password manager).
+# the passwords are stored in a .json file in a hidden directory created at the first instance of running the script.
+# the script is unfortunately not portable as it is written for linux kernels.
+
+import getpass, json, os, pyperclip, shutil, sys		
+        
+print("1. Create new manager account.", "2. Log into existing manager account.", "3. Delete manager account.", sep="\n")
+print()	
+loginChoice = int(input("Enter numeric choice: "))
+if loginChoice == 1:
+    try:
+        user = getpass.getuser()
+        path = os.path.join("/home/", user, "._")
+        os.makedirs(path, exist_ok=True)
+        folder = os.path.join(path, "pw.json")
+        with open(folder, "r") as manager:
+            print("An account already exists.")
+        sys.exit(1)
+    except FileNotFoundError:
+        print("Set up username and passcode: ")
+        folder = os.path.join(path, "pw.json")
+        id_username = {}
+        username = input("Enter Username: ")
+        username = username.capitalize()
+        id_username["username"] = username
+        while True:
+            code = input("Enter New Passcode: ")
+            codeCheck = input("Confirm Passcode: ")
+            if code != codeCheck:
+                print("Passcodes do not match. Try again.")
+            else:
+                id_username["sc"] = code
+                with open(folder, "w") as manager:
+                    json.dump(id_username, manager, indent=4)
+                    print("The manager account for ", username, " was successfully created.")
+                    print()
+                    break
+elif loginChoice == 2:
+	try:
+		user = getpass.getuser()
+		path = os.path.join("/home/", user, "._")
+		os.makedirs(path, exist_ok=True)
+		folder = os.path.join(path, "pw.json")
+		with open(folder, "r") as manager:
+			id_username = json.load(manager)
+			for _ in range(3, 0, -1):
+				login_username = input("Enter Username: ")
+				login_username = login_username.capitalize()
+				if login_username != id_username["username"]:
+					print("Incorrect username ", _ - 1, " trial(s) left." )
+					if _ == 1:
+						print()
+						print("Too many incorrect attempts.")
+						print()
+						sys.exit()
+				else:
+					break
+			for _ in range(3, 0, -1):
+				login_code = input("Enter Passcode: ")
+				if login_code != id_username["sc"]:
+					print("Incorrect passcode ", _ -1, " trial(s) left.")
+					if _ == 1:
+						print()
+						print("Too many incorrect attempts.")
+						print()
+				else:
+					print()
+					print("Login successful!")
+					print()
+					break
+	except FileNotFoundError:
+		print("User account not found. Go to the main menu to create one.")
+		sys.exit(4)
+elif loginChoice == 3:
+    try:
+        user = getpass.getuser()
+        path = os.path.join("/home/", user, "._")
+        os.makedirs(path, exist_ok=True)
+        folder = os.path.join(path, "pw.json")
+        with open(folder, "r") as manager:
+            id_username = json.load(manager)
+            deleteChoice = input("Proceed with account deletion? This action CANNOT be reversed. [Y/n]: ")
+            deleteChoice = deleteChoice.capitalize()
+            if deleteChoice == 'Y':
+                del_code = input("Enter manager passcode: ")
+                if del_code != id_username["sc"]:
+                    print("Incorrect passcode! :(")
+                    sys.exit()
+                else:
+                    path = os.path.join("/home/", getpass.getuser(), "._")
+                    shutil.rmtree(path)
+                    print("Account deletion successful.")
+                    sys.exit()
+            else:
+                sys.exit()  
+    except FileNotFoundError:
+        print("A manager account does not exist.")
+        sys.exit()
+else:
+    print("You may pick between 1 and 2 only.")
+    sys.exit(5)
+
+def load():
+	with open(folder, "r") as manager:
+		return json.load(manager)
+
+def add():
+	def append():
+		with open(folder, "w") as manager:
+			return json.dump(PASSWORDS, manager, indent = 4)
+	account = input("Enter name of account whose password you wish to store: ")
+	account = account.capitalize()
+	PASSWORDS = load()
+	if account in PASSWORDS.keys():
+		print("A password already exists for ", account + ". Go back to the main menu if you wish to change it.")
+	else:
+		pw = input("Enter password: ")
+		PASSWORDS[account] = pw
+		append()
+		print("The password for ", account, " has been successfully added to the manager.")
+
+def copy():
+	account = input("Enter the name of the account whose password you wish to copy: ")
+	account = account.capitalize()
+	PASSWORDS = load()
+	if account in PASSWORDS.keys():
+		pyperclip.copy(PASSWORDS[account])
+		print("The password for your ", account, " account has been copied to the clipboard!")
+	else:
+		print("The manager does not contain any password for ", account)
+	
+def change():
+	def append():
+		with open(folder, "w") as manager:
+			return json.dump(PASSWORDS, manager, indent=4)
+	account = input("Enter the name of the account whose password you wish to change: ")
+	account = account.capitalize()
+	PASSWORDS = load()
+	if account not in PASSWORDS.keys():
+		print(account, " does not exist in the manager.")
+	else:
+		print()
+		for _ in range(3, 0, -1):
+			pw = input("Enter old password for ", account, ": ")
+			if pw  != PASSWORDS[account]:
+				if _ == 1:
+					print("All entered passwords were incorrect.")
+					break
+				print("Wrong password!")
+				print ( _ - 1, " trial(s) left")
+			else:
+				print("Enter new password: ")
+				new_pw = input()
+				PASSWORDS[account] = new_pw
+				append()
+				print("The new password was successfully updated for your ", account + ".")
+				break
+def view():
+	PASSWORDS = load()
+	for k, v in PASSWORDS.items():
+		print("Account: \t", k, " - \t Password: ", v)
+
+def delete():
+    account = input("Enter the name of the account whose password you wish to delete: ")
+    account = account.capitalize()
+    PASSWORDS = load()
+    if account not in PASSWORDS.keys():
+        print(account, " does not exist.")
+    else:
+        user = getpass.getuser()
+        path = os.path.join("/home/", user, "._")
+        os.makedirs(path, exist_ok=True)
+        folder = os.path.join(path, "pw.json")
+        del PASSWORDS[account] 
+        with open(folder, "w") as manager:
+            json.dump(PASSWORDS, manager, indent = 4)
+        print(account, " account deleted successfully.")
+
+print("What Would You Like To Do? :)")
+print("1. Add password", "2. Copy password", "3. Change password", "4. View stored passwords", "5. Delete password", sep="\n")
+print()
+try:
+    choice = int(input("Enter Numeric Option: "))
+    if choice == 1:
+	    add()
+    elif choice == 2:
+        copy()
+    elif choice == 3:
+        change()
+    elif choice == 4:
+        view()
+    elif choice == 5:
+        delete()
+    else:
+        print("Choose a number between 1 and 5 only.")
+except ValueError:
+    print("Invalid choice! Choose a number between 1 and 5.")
